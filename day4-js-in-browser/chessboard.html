@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+#page {
+    display: table;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+}
+
+button {
+
+    position: absolute;
+    top: 50%;
+    left: calc(50% - 74px);
+
+    display: inline-block;
+    border-radius: 2px;
+    height: 45px;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+
+    background-color: transparent;
+    color: red;
+    border: 1px solid red;
+    outline: none;
+
+    transition: .2s ease;
+
+    &:hover {
+        background-color: red;
+        color: white;
+
+        transition: .2s ease;
+    }
+}
+
+#table_wrapper {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+table.center {
+    margin-left:auto;
+    margin-right:auto;
+    border-collapse:collapse;
+}
+
+td {
+    height: 36px;
+    width: 36px;
+}
+
+td.white {
+    background-color: lightgray;
+}
+
+td.black {
+    background-color: black;
+}
+</style>
+</head>
+<body>
+    <div id = "page">
+        <div id = "table_wrapper">
+            <button type="button" onclick="buildChessboard()" id = "start">Let`s build The Chessboard</button>
+        </div>
+    </div>
+
+<script>
+var buildChessboard = function(){
+
+    var tables = document.getElementsByClassName('center');
+    while (tables[0]) tables[0].parentNode.removeChild(tables[0]);
+
+    var table = document.createElement("table");
+    table.className = "center";
+
+    for (var i = 0; i < 8; i++) {
+        var tr = document.createElement('tr');
+        for (var j = 0; j < 8; j++) {
+            var td = document.createElement('td');
+            (i%2 == j%2) ? td.className = "white" : td.className = "black";
+
+            tr.appendChild(td);
+        }
+        table.appendChild(tr);
+    }
+    document.getElementById('start').style.left="10px";
+    document.getElementById('table_wrapper').appendChild(table);
+
+};
+
+</script>
+</body>
+</html>
