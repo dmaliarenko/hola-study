@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+<style>
+
+#page {
+    display: table;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+}
+
+#todolist_wrapper {
+    display: table-cell;
+    /*vertical-align: middle;*/
+    text-align: center;
+}
+
+
+#add_panel {
+    width:500px;
+    height:auto;
+
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#inputfield {
+    width:400px;
+}
+
+#todolist {
+    width:460px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align: left;
+}
+
+li {
+    list-style-type: none;
+}
+
+.del {
+    cursor: pointer;
+    color: gray;
+}
+
+li:hover .del{
+    color:red;
+}
+
+</style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+</head>
+<body>
+    <div id = "page">
+        <div id = "todolist_wrapper">
+            <div id="add_panel">
+                <input type="text" id="inputfield"><button type="button" id="addtodo" style="float:right">Add!</button>
+            </div>
+            <ul id="todolist">
+                <li id="not_clone_todo" hidden>
+                    <input type="checkbox" name="todo_item[]">
+                    <span class="todo">Something</span>
+                    <span class="del" style="float:right">⊗</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+<script>
+function draw_one_ToDo(todo_text) {
+    $("#todolist").append($("#todolist")
+        .find("#not_clone_todo").clone(true).removeAttr("id").removeAttr("hidden").addClass("ToDoItem")
+        .find(".todo").html(todo_text).end()
+    );
+};
+
+function  saveToDoList(todoList) {
+    localStorage["myTodoList"] = JSON.stringify(todoList);
+    console.log(JSON.stringify(todoList));
+}
+
+function addNewToDo(todo_text, todoList) {
+    todoList.push(todo_text);
+    todoList.forEach(function(item, i, arr) {
+        console.log( i + ": " + item + " (массив:" + arr + ")" );
+    });
+
+    saveToDoList(todoList);
+    draw_one_ToDo(todo_text);
+};
+
+function delOneToDo(todotext, todoList) {
+    var index = todoList.indexOf(todotext);
+    todoList.splice(index, 1);
+    saveToDoList(todoList);
+
+}
+
+$(document).ready(function() {
+
+    var todoList = new Array();
+    if (localStorage["myTodoList"]) {
+        todoList = JSON.parse(localStorage["myTodoList"]);
+    }
+
+    todoList.forEach(function(item, i, arr) {
+        console.log( i + ": " + item + " (массив:" + arr + ")" );
+        draw_one_ToDo(item);
+    });
+
+    $('#add_panel').on('click', '#addtodo', function() {
+        if ($('#inputfield').val() == "") {
+            console.log("empty todo");
+        } else {
+            console.log("not empty todo");
+            addNewToDo($('#inputfield').val(), todoList);
+        }
+        console.log("Add new todo");
+        $('#inputfield').val("");
+    });
+
+    $('#todolist').on('click', '.del', function() {
+        console.log("Attempt to delete todo: " + $(this).parents('.ToDoItem').find('.todo').html());
+        $(this).parents('.ToDoItem').remove();
+        delOneToDo($(this).parents('.ToDoItem').find('.todo').html(), todoList);
+    });
+
+});
+
+</script>
+</body>
+</html>
