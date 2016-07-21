@@ -80,14 +80,10 @@ function draw_one_ToDo(todo_text) {
 
 function  saveToDoList(todoList) {
     localStorage["myTodoList"] = JSON.stringify(todoList);
-    console.log(JSON.stringify(todoList));
 }
 
 function addNewToDo(todo_text, todoList) {
     todoList.push(todo_text);
-    todoList.forEach(function(item, i, arr) {
-        console.log( i + ": " + item + " (массив:" + arr + ")" );
-    });
 
     saveToDoList(todoList);
     draw_one_ToDo(todo_text);
@@ -108,7 +104,6 @@ $(document).ready(function() {
     }
 
     todoList.forEach(function(item, i, arr) {
-        console.log( i + ": " + item + " (массив:" + arr + ")" );
         draw_one_ToDo(item);
     });
 
@@ -116,15 +111,12 @@ $(document).ready(function() {
         if ($('#inputfield').val() == "") {
             console.log("empty todo");
         } else {
-            console.log("not empty todo");
             addNewToDo($('#inputfield').val(), todoList);
         }
-        console.log("Add new todo");
         $('#inputfield').val("");
     });
 
     $('#todolist').on('click', '.del', function() {
-        console.log("Attempt to delete todo: " + $(this).parents('.ToDoItem').find('.todo').html());
         $(this).parents('.ToDoItem').remove();
         delOneToDo($(this).parents('.ToDoItem').find('.todo').html(), todoList);
     });
