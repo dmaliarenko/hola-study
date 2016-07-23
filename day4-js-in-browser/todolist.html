@@ -50,7 +50,22 @@ li:hover .del{
     color:red;
 }
 
+.open .todo {
+    text-decoration: none;
+}
+
+.done .todo {
+    text-decoration: line-through;
+}
+
+#del_done {
+    text-decoration: underline;
+    cursor: pointer;
+}
 </style>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 </head>
@@ -58,69 +73,172 @@ li:hover .del{
     <div id = "page">
         <div id = "todolist_wrapper">
             <div id="add_panel">
+                <input type="checkbox" class="check_all">
                 <input type="text" id="inputfield"><button type="button" id="addtodo" style="float:right">Add!</button>
             </div>
             <ul id="todolist">
                 <li id="not_clone_todo" hidden>
-                    <input type="checkbox" name="todo_item[]">
+                    <input type="checkbox" name="todo_item[]" class="todo_checkbox">
                     <span class="todo">Something</span>
                     <span class="del" style="float:right">⊗</span>
                 </li>
             </ul>
+            <!-- Provides extra visual weight and identifies the primary action in a set of buttons -->
+            <button type="button" class="btn btn-primary" id="btn_all">Все</button>
+            <button type="button" class="btn btn-secondary" id="btn_active">Активные</button>
+            <button type="button" class="btn btn-secondary" id="btn_done">Сделанные</button>
+            <span id="del_done">удалить сделанные</span>
         </div>
     </div>
 
 <script>
-function draw_one_ToDo(todo_text) {
+
+
+//my class for ToDo
+var ToDoClass = (function() {
+    var prefix = 'todo_';
+    var nextId = 1;
+
+    return function ToDoClass(todo) {
+        this.todo = todo;
+        this.id = prefix + nextId++;
+        this.done = false;
+    }
+})();
+function draw_one_ToDo(objToDo) {
+    var doneClass = objToDo.done ? "done" : "open";
     $("#todolist").append($("#todolist")
-        .find("#not_clone_todo").clone(true).removeAttr("id").removeAttr("hidden").addClass("ToDoItem")
-        .find(".todo").html(todo_text).end()
+        .find("#not_clone_todo").clone(true).removeAttr("id").attr("id", objToDo.id).removeAttr("hidden").addClass("ToDoItem").addClass(doneClass)
+        .find("input[type='checkbox'].todo_checkbox").prop('checked', objToDo.done).end()
+        .find(".todo").html(objToDo.todo).end()
     );
 };
 
 function  saveToDoList(todoList) {
-    localStorage["myTodoList"] = JSON.stringify(todoList);
+    console.log(todoList);
+    var myTodoList = todoList;
+    //myTodoList = todoList;
+    console.log("JSON.stringify todoList: " + JSON.stringify(myTodoList));
+    localStorage["myTodoList"] = JSON.stringify(myTodoList);
 }
 
-function addNewToDo(todo_text, todoList) {
-    todoList.push(todo_text);
-
+function addNewToDo(objToDo, todoList) {
+    todoList[objToDo.id] = objToDo;
+    console.log(objToDo.id);
+    console.log(todoList);
+    console.log(todoList[objToDo.id]);
     saveToDoList(todoList);
-    draw_one_ToDo(todo_text);
+    draw_one_ToDo(objToDo);
 };
 
-function delOneToDo(todotext, todoList) {
-    var index = todoList.indexOf(todotext);
-    todoList.splice(index, 1);
+function delOneToDo(todoID, todoList) {
+//    var index = todoList.indexOf(todotext);
+//    todoList.splice(index, 1);
+    console.log(todoList);
+    delete todoList[todoID];
+    console.log("after");
+    console.log(todoList);
     saveToDoList(todoList);
 
+}
+
+function changeToDoStatus(todoID, status, todoList) {
+    todoList[todoID].done = status;
+    saveToDoList(todoList);
 }
 
 $(document).ready(function() {
 
-    var todoList = new Array();
+    var todoList = {};
+
+//    var myTodoList = {};
+//    localStorage["myTodoList"] = JSON.stringify(myTodoList);
+
     if (localStorage["myTodoList"]) {
+        console.log(JSON.parse(localStorage["myTodoList"]));
         todoList = JSON.parse(localStorage["myTodoList"]);
     }
 
-    todoList.forEach(function(item, i, arr) {
-        draw_one_ToDo(item);
-    });
+    for (var key in todoList) {
+        console.log(todoList[key]);
+        var objToDo = new ToDoClass(todoList[key].todo);
+        objToDo.done = todoList[key].done;
+        addNewToDo(todoList[key], todoList);
+    }
 
     $('#add_panel').on('click', '#addtodo', function() {
         if ($('#inputfield').val() == "") {
             console.log("empty todo");
         } else {
-            addNewToDo($('#inputfield').val(), todoList);
+            var objToDo = new ToDoClass($('#inputfield').val());
+            console.log(objToDo);
+            addNewToDo(objToDo, todoList);
         }
         $('#inputfield').val("");
     });
 
     $('#todolist').on('click', '.del', function() {
+        delOneToDo($(this).parents('.ToDoItem').attr('id'), todoList);
+        console.log("attemp to remove id: " + $(this).parents('.ToDoItem').attr('id'));
         $(this).parents('.ToDoItem').remove();
-        delOneToDo($(this).parents('.ToDoItem').find('.todo').html(), todoList);
     });
 
+    $("input[type='checkbox'].todo_checkbox").change(function() {
+        var status = false;
+        if(this.checked) {
+            var removeClass = "open";
+            var addClass = "done";
+            status = true;
+        } else {
+            var removeClass = "done";
+            var addClass = "open";
+        }
+
+        $(this).parents('.ToDoItem').removeClass(removeClass).addClass(addClass);
+        changeToDoStatus($(this).parents('.ToDoItem').attr('id'), status, todoList);
+    });
+
+    $("input[type='checkbox'].check_all").change(function() {
+        var status = false;
+        if(this.checked) {
+            var removeClass = "open";
+            var addClass = "done";
+            status = true;
+        } else {
+            var removeClass = "done";
+            var addClass = "open";
+        }
+
+        $('.ToDoItem').each(function(i, obj) {
+            $(this).find("input[type='checkbox'].todo_checkbox").prop('checked', status);
+            $(this).removeClass(removeClass).addClass(addClass);
+            changeToDoStatus($(this).attr('id'), status, todoList);
+        });
+    });
+
+    $('#todolist_wrapper').on('click', '#btn_all', function() {
+        $('.ToDoItem').show();
+    });
+
+    $('#todolist_wrapper').on('click', '#btn_active', function() {
+        $('.open').show();
+        $('.done').hide();
+    });
+
+    $('#todolist_wrapper').on('click', '#btn_done', function() {
+        $('.done').show();
+        $('.open').hide();
+    });
+
+    $('#todolist_wrapper').on('click', '#del_done', function() {
+        console.log("del done");
+
+        $('.done').each(function(i, obj) {
+            delOneToDo($(this).attr('id'), todoList);
+            console.log("attemp to remove id: " + $(this).attr('id'));
+            $(this).remove();
+        });
+    });
 });
 
 </script>
