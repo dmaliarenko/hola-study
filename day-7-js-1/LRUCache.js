@@ -108,7 +108,7 @@ LRUCache.prototype.has = function(key) {
     return this.map.has(key);
 };
 
-lru.prototype.get = function(key) {
+LRUCache.prototype.get = function(key) {
     if (this.map.has(key)) {
         this.list.removeByValue(key);
         this.list.add(key);
@@ -117,7 +117,7 @@ lru.prototype.get = function(key) {
 };
 
 
-lru.prototype.set = function(key, value) {
+LRUCache.prototype.set = function(key, value) {
     if (this.map.has(key)) {
         this.list.removeByValue(key);
     }
