@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta charset="utf-8">
+</head>
+<body>
+<script src="LRUCache.js"></script>
+<script>
+    var myLRUCache = new LRUCache(5);
+    myLRUCache.set(1, "one");
+    myLRUCache.set(2, "two");
+    myLRUCache.set(3, "three");
+    myLRUCache.set(4, "four");
+    myLRUCache.set(5, "five");
+    console.log( "start: " + myLRUCache.queueToString());
+</script>
+</body>
+</html>
