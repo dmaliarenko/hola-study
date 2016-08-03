@@ -12,7 +12,6 @@ DoubleLinkedList.prototype = {
             next: null,
             prev: null,
         }
-
         if (this.length == 0) {
             this.head = node;
             this.tail = node;
@@ -41,6 +40,10 @@ DoubleLinkedList.prototype = {
     removeByValue: function(value) {
 
         var node = this.getByValue(value);
+        if (this.getByValue(value) === null) {
+            return;
+        }
+
         var i = 0;
 
         if (node.value === value){
@@ -48,25 +51,28 @@ DoubleLinkedList.prototype = {
                 node.next.prev = node.prev;
                 node.prev.next = node.next;
                 delete node;
+                this.length--;
             }
             else if (node.prev === null && node.next !== null)
             {
                 node.next.prev = null;
                 this.head = node.next;
                 delete node;
+                this.length--;
             }
             else if (node.next === null && node.prev !== null) {
                 node.prev.next = null;
                 this.tail = node.prev;
                 delete node;
+                this.length--;
             }
             else{
                 this.head = null;
                 this.tail = null;
                 delete node;
+                this.length--;
             }
         }
-        this.length--;
         return;
     },
 
@@ -85,51 +91,64 @@ DoubleLinkedList.prototype = {
                 node.next.prev = null;
                 this.head = node.next;
                 delete node;
+                this.length--;
             }
             else{
                 this.head = null;
                 this.tail = null;
                 delete node;
+                this.length--;
             }
         }
-        this.length--;
         return;
+    },
+
+    toString: function() {
+        var node = this.head;
+        var arr = [];
+        var i = 0;
+
+        while (i++ < this.length) {
+            arr.push(node.value);
+            node = node.next;
+        }
+
+        return arr.toString();
+
     },
 };
 
 function LRUCache(limit) {
-    this.size = 0;
+    this.limit = 0;
     (typeof limit == "number") ? this.limit = limit : this.limit = 10;
     this.map = new Map();
     this.list = new DoubleLinkedList();
 }
+LRUCache.prototype = {
+    has: function(key) {
+        return this.map.has(key);
+    },
 
-LRUCache.prototype.has = function(key) {
-    return this.map.has(key);
-};
+    get: function(key) {
+        if (this.map.has(key)) {
+            this.list.removeByValue(key);
+            this.list.add(key);
+        }
+        return this.map.get(key);
+    },
 
-LRUCache.prototype.get = function(key) {
-    if (this.map.has(key)) {
-        this.list.removeByValue(key);
-        this.list.add(key);
-    }
-    return this.map.get(key);
-};
-
-
-LRUCache.prototype.set = function(key, value) {
-    if (this.map.has(key)) {
-        this.list.removeByValue(key);
-    }
-
-    if (this.list.length < this.size) {
+    set: function(key, value) {
+        if (!this.map.has(key) & this.list.length >= this.limit) {
+            this.map.delete(this.list.getHead());
+            this.list.removeHead();
+        }
         this.list.removeByValue(key);
         this.list.add(key);
         this.map.set(key, value);
-    } else {
-        this.list.removeHead();
-        this.list.add(key);
-        this.map.set(key, value);
+        return;
+    },
+    queueToString: function() {
+        return this.list.toString();
     }
-    return;
+
 };
