@@ -4,12 +4,12 @@ var QueueRunner = (function(){
 
     QueueRunner.prototype.running = false;
 
-    QueueRunner.prototype.QueueRunner = [];
+    QueueRunner.prototype.queue = [];
 
     QueueRunner.prototype.push = function(callback) {
         var _this = this;
 
-        this.QueueRunner.push(function(){
+        this.queue.push(function(){
             var finished = callback();
             if(typeof finished === "undefined" || finished) {
 
@@ -25,10 +25,10 @@ var QueueRunner = (function(){
         return this;
     }
 
-    QueueRunner.prototype.exec = function(){
+    QueueRunner.prototype.exec = function(callback){
         this.running = false;
 
-        var shift = this.QueueRunner.shift();
+        var shift = this.queue.shift();
         if(shift) {
             this.running = true;
             shift();
