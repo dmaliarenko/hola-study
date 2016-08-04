@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta charset="utf-8">
+</head>
+<body>
+<script src="QueueRunner4.js"></script>
+<script>
+var data1 = 1;
+var data2 = 2;
+var data3 = 3;
+
+var func1 = function() {
+    console.log("func1: " + data1);
+};
+
+var func2 = function() {
+    console.log("func2: " + data2);
+};
+
+var func3 = function() {
+    console.log("func3: " + data3);
+};
+
+var QueueRunner = new QueueRunner();
+
+
+QueueRunner.push(func1);
+QueueRunner.push(func2);
+QueueRunner.push(func3);
+
+QueueRunner.exec();
+
+</script>
+</body>
+</html>
