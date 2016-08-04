@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta charset="utf-8">
+</head>
+<body>
+<script src="QueueRunner8.js"></script>
+<script>
+var data1 = 1;
+var data2 = 2;
+var data3 = 3;
+
+var func1 = function() {
+    setTimeout(function() {
+        console.log("func1: " + data1);
+    }, 3000);
+};
+
+var func2 = function() {
+    setTimeout(function() {
+        console.log("func2: " + data2);
+    }, 4000);
+};
+
+var func3 = function() {
+    setTimeout(function() {
+        console.log("func3: " + data3);
+    }, 10000);
+};
+
+var QueueRunner = new QueueRunner();
+
+
+QueueRunner.push({data: {data1}, fn: func1});
+QueueRunner.push({data: {data2}, fn: func2});
+QueueRunner.push({data: {data3}, fn: func3});
+
+QueueRunner.exec();
+
+</script>
+</body>
+</html>
