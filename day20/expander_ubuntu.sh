@@ -5,7 +5,7 @@ PORT='80'
 WEB_DIR='/var/www'
 USERNAME=''
 PASSWORD='password'
-GIT='https://github.com/holateam/library-portal.git'
+GIT='https://github.com/dmaliarenko/nodejs-basics.git'
 
 
 apt-get -y update
@@ -17,7 +17,9 @@ apt-get -y install epel-release
 apt-get -y install nginx
 apt-get -y install git
 apt-get -y install node
-
+ln -s /usr/bin/nodejs /usr/local/bin/node
+apt-get -y install npm
+npm install forever -g
 
 usage()
 {
@@ -33,6 +35,12 @@ OPTIONS:
    -g	git for clone
 EOF
 }
+
+mkdir -p $WEB_DIR
+
+#mkdir -p $WEB_DIR/$DOMAIN/html
+#chmod -R 755 $WEB_DIR
+
 
 while getopts “hd:u:p:g:v” OPTION
 do
@@ -50,7 +58,8 @@ do
 		g)
 			cd $WEB_DIR
 			git init
-			git clone $GIT $DOMAIN
+			git clone $OPTARG $DOMAIN
+			chmod -R 755 $WEB_DIR
             ;;
 		v)
             VERBOSE=1
@@ -62,46 +71,69 @@ do
 	esac
 done
 
+cd $WEB_DIR
+git init
+git clone $GIT $DOMAIN
+chmod -R 755 $WEB_DIR
 
-	mkdir -p $WEB_DIR
-	mkdir -p $WEB_DIR/$DOMAIN/html
-	chmod -R 755 $WEB_DIR
+cd $WEB_DIR/$DOMAIN
+
+npm install
+chown -R $(whoami) ~/.npm
+
+forever start index.js
 
 mkdir /etc/nginx/sites-available
 mkdir /etc/nginx/sites-enabled
 
-
-grep -q -F 'include /etc/nginx/sites-enabled/*.conf' /etc/nginx/nginx.conf || sed '/http {/a include /etc/nginx/sites-enabled/*.conf;n\server_names_hash_bucket_size 64;' /etc/nginx/nginx.conf
-
-# Create test index.html
-cat > $WEB_DIR/$DOMAIN/html/index.html <<EOF
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-        <h1>Success! The $DOMAIN server is working!</h1>
-</body>
-</html>
-EOF
+#grep -q -F 'include /etc/nginx/sites-enabled/*.conf' /etc/nginx/nginx.conf || sed -i '/# Settings/i include /etc/nginx/sites-enabled/*.conf;' /etc/nginx/nginx.conf
+#grep -q -F 'include /etc/nginx/sites-enabled/*.conf' /etc/nginx/nginx.conf || sed -i '/# Settings/i server_names_hash_bucket_size 64;' /etc/nginx/nginx.conf
 
 # Create config file
 cat > /etc/nginx/sites-available/$DOMAIN.conf <<EOF
-server {
-    listen   80; ## listen for ipv4; this line is default and implied
-    listen   [::]:80 default ipv6only=on; ## listen for ipv6
-    root $WEB_DIR/$DOMAIN/html;
-    index index.html index.htm;
 
-    server_name $DOMAIN www.$DOMAIN;
+# Add to nginx.conf http section
+map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+upstream some_upsteram_com {
+    server 127.0.0.1:3015;
+    keepalive 15;
+}
+
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server ipv6only=on;
+
+	root $WEB_DIR/$DOMAIN;
+	index index.html index.htm;
+	
+	server_name .$DOMAIN;
+
+	location / {
+            proxy_pass http://127.0.0.1:3015;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host \$host;
+            proxy_cache_bypass \$http_upgrade;
+        }
+	
+
+	location /socket\.io {
+
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header Host \$http_host;
+            proxy_set_header X-NginX-Proxy true;
+            proxy_pass http://127.0.0.1:3015;
+            proxy_redirect off;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+         }
 }
 EOF
 
@@ -112,4 +144,4 @@ service nginx stop
 service nginx start
 
 #sed -i "127.0.0.1  $DOMAIN" /etc/hosts
-#echo "127.0.0.1 $DOMAIN" >> /etc/hosts
+echo "127.0.0.1 $DOMAIN" >> /etc/hosts
